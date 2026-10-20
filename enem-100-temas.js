@@ -28,6 +28,6 @@ window.enem100Random=()=>{const el=document.getElementById('enem100choose');cons
 window.enem100ShowModel=()=>{document.getElementById('enem100model').hidden=false};
 window.enem100Save=()=>{const a=document.getElementById('enem100answer').value.trim();if(!a)return alert('Escreva sua redação antes de salvar.');const d=saved();d[current]=a;try{localStorage.setItem(KEY,JSON.stringify(d))}catch(e){return alert('Não foi possível salvar. Verifique o armazenamento do navegador.')}window.dispatchEvent(new CustomEvent('enem-energia',{detail:{tipo:'discursiva'}}));alert('Redação salva neste dispositivo.')};
 const previous=render;
-render=function(){previous();if(tab==='Discursivas'){const app=document.querySelector('#app');app.insertAdjacentHTML('afterbegin',view());populate('Todos')}};
+render=function(){previous();if(tab==='Discursivas'){const app=document.querySelector('#app');app.insertAdjacentHTML('beforeend',view());populate('Todos')}};
 window.enem100Data=temas;
 })();
