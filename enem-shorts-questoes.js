@@ -5,12 +5,35 @@ const key='enem-shorts-questoes-v15';
 const read=()=>{try{return JSON.parse(localStorage.getItem(key)||'{}')}catch(e){return {}}};
 let areaFilter='Todas',current=0;
 const prev=render;
-render=function(){prev();if(tab!=='Shorts')return;const app=document.querySelector('#app');app.innerHTML='<section class="panel"><h2>🎯 Shorts — Questões do ENEM</h2><p>108 exercícios autorais, separados por matéria e capítulo. Resolva, confira a explicação e revise seus erros.</p><label for="shortArea">Matéria</label><select id="shortArea" onchange="enemShortFilter(this.value)">'+['Todas','Matemática','Natureza','Linguagens','Humanas'].map(a=>'<option value="'+a+'" '+(a===areaFilter?'selected':'')+'>'+a+'</option>').join('')+'</select><div class="row"><button onclick="enemShortShuffle()">🔀 Sortear questão</button><button onclick="enemShortNext()">Próxima →</button></div><div id="enemShortQuestion"></div><div id="enemShortProgress"></div></section>';show()};
-function available(){return questions.map((q,i)=>({q,i})).filter(x=>areaFilter==='Todas'||x.q.area===areaFilter)}
-function show(){const list=available();if(!list.length)return;let item=list.find(x=>x.i===current);if(!item){item=list[0];current=item.i}const q=item.q,done=read()[current];document.getElementById('enemShortQuestion').innerHTML='<div class="panel"><span class="pill">'+esc(q.area)+'</span><h3>Capítulo '+q.num+' · Nível '+q.level+'</h3><p><b>'+esc(q.q)+'</b></p>'+q.opts.map((o,i)=>'<label style="display:block;padding:10px"><input type="radio" name="shortAnswer" value="'+i+'"> '+String.fromCharCode(65+i)+') '+esc(o)+'</label>').join('')+'<button type="button" onclick="enemShortCheck()">Corrigir resposta</button><div id="enemShortResult" role="status">'+(done?'<p>Última tentativa: '+(done.correct?'acerto':'erro')+'.</p>':'')+'</div></div>';const records=read(),total=Object.keys(records).length,correct=Object.values(records).filter(v=>v.correct).length;document.getElementById('enemShortProgress').textContent='Questões respondidas: '+total+'/108 · Acertos na última tentativa: '+correct}
-window.enemShortFilter=function(a){areaFilter=a;current=available()[0]?.i||0;show()};
-window.enemShortShuffle=function(){const list=available();current=list[Math.floor(Math.random()*list.length)].i;show()};
-window.enemShortNext=function(){const list=available();let pos=list.findIndex(x=>x.i===current);current=list[(pos+1)%list.length].i;show()};
-window.enemShortCheck=function(){const chosen=document.querySelector('input[name="shortAnswer"]:checked');if(!chosen)return alert('Escolha uma alternativa.');const q=questions[current],answer=+chosen.value,correct=answer===q.right,records=read(),first=!records[current];records[current]={correct,answer,at:new Date().toISOString()};try{localStorage.setItem(key,JSON.stringify(records))}catch(e){}document.getElementById('enemShortResult').innerHTML='<p><b>'+(correct?'✓ Acertou!':'✗ Resposta incorreta.')+'</b> Gabarito: '+String.fromCharCode(65+q.right)+'</p><p>'+esc(q.why)+'</p>';if(correct&&first){window.dispatchEvent(new CustomEvent('enem-energia',{detail:{tipo:'questao'}}));if(typeof xp==='function')xp(5)}};
+let filter='Todas',position=0,wrongOnly=false,locked=false;
+const areas=['Todas','Matemática','Natureza','Linguagens','Humanas'];
+function list(){const data=read();return questions.map((q,i)=>({q,i})).filter(({q,i})=>(filter==='Todas'||q.area===filter)&&(!wrongOnly||data[i]?.correct===false))}
+function count(){const data=read();return Object.values(data).filter(x=>x&&typeof x.correct==='boolean').length}
+function paint(){
+const items=list(),item=items[position]||items[0],slot=document.getElementById('enemFeedCard');if(!slot)return;
+if(!item){slot.innerHTML='<div class="enem-feed-empty">Não há questões neste filtro. Altere a matéria ou desative a revisão de erros.</div>';document.getElementById('enemFeedCounter').textContent='0/0';return}
+const q=item.q,record=read()[item.i];document.getElementById('enemFeedCounter').textContent=(position+1)+'/'+items.length+' · '+count()+' respondidas';
+slot.innerHTML='<div class="enem-feed-meta">'+esc(q.area)+' · Capítulo '+q.num+' · Nível '+q.level+'</div><h2>'+esc(q.q)+'</h2><div class="enem-feed-options">'+q.opts.map((opt,i)=>'<button type="button" class="enem-feed-option" data-answer="'+i+'" onclick="enemFeedAnswer('+item.i+','+i+')" '+(record?'disabled':'')+'>'+String.fromCharCode(65+i)+') '+esc(opt)+'</button>').join('')+'</div><div class="enem-feed-feedback" role="status" id="enemFeedFeedback"></div>';
+if(record)feedback(q,record.answer,record.correct);
+}
+function feedback(q,answer,correct){
+const slot=document.getElementById('enemFeedFeedback');if(!slot)return;
+document.querySelectorAll('.enem-feed-option').forEach(el=>{const n=Number(el.dataset.answer);el.disabled=true;if(n===q.right)el.classList.add('ok');else if(n===answer)el.classList.add('no')});
+slot.innerHTML='<strong>'+(correct?'✓ Correto':'✗ Incorreto')+' · Gabarito '+String.fromCharCode(65+q.right)+'</strong><p>'+esc(q.why)+'</p>';
+}
+function next(delta){const items=list();if(!items.length)return;position=(position+delta+items.length)%items.length;paint()}
+function layout(){
+const app=document.querySelector('#app');if(!app)return;
+app.innerHTML='<div class="enem-feed"><div class="enem-feed-top"><strong>🎬 Shorts ENEM</strong><span id="enemFeedCounter"></span></div><div class="enem-feed-filters"><select id="enemFeedArea" aria-label="Filtrar matéria" onchange="enemFeedFilter(this.value)">'+areas.map(a=>'<option value="'+a+'" '+(a===filter?'selected':'')+'>'+a+'</option>').join('')+'</select><button type="button" onclick="enemFeedWrong()" id="enemWrongToggle">'+(wrongOnly?'✓ Revisando erros':'Revisar erros')+'</button><button type="button" onclick="enemFeedRandom()">🔀</button></div><div class="enem-feed-card" id="enemFeedCard"></div><div class="enem-feed-controls"><button type="button" onclick="enemFeedPrev()">↑ Anterior</button><span>Deslize para avançar</span><button type="button" onclick="enemFeedNext()">Próximo ↓</button></div></div>';
+const feed=app.querySelector('.enem-feed');let startY=0,startX=0;feed.addEventListener('touchstart',e=>{startY=e.touches[0].clientY;startX=e.touches[0].clientX},{passive:true});feed.addEventListener('touchend',e=>{const dy=e.changedTouches[0].clientY-startY,dx=e.changedTouches[0].clientX-startX;if(Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.3&&!(e.target.closest('.enem-feed-options')&&Math.abs(dy)<100))next(dy<0?1:-1)},{passive:true});paint()
+}
+render=function(){prev();if(tab==='Shorts')layout()};
+window.enemFeedFilter=a=>{filter=a;position=0;paint()};
+window.enemFeedWrong=()=>{wrongOnly=!wrongOnly;position=0;layout()};
+window.enemFeedRandom=()=>{const n=list().length;if(n){position=Math.floor(Math.random()*n);paint()}};
+window.enemFeedPrev=()=>next(-1);window.enemFeedNext=()=>next(1);
+window.enemFeedAnswer=(id,answer)=>{if(locked)return;const item=list()[position];if(!item||item.i!==id)return;const data=read();if(data[id])return;const correct=answer===item.q.right;data[id]={answer,correct,at:new Date().toISOString()};try{localStorage.setItem(key,JSON.stringify(data))}catch(e){}feedback(item.q,answer,correct);document.getElementById('enemFeedCounter').textContent=(position+1)+'/'+list().length+' · '+count()+' respondidas';if(correct){window.dispatchEvent(new CustomEvent('enem-energia',{detail:{tipo:'questao'}}));if(typeof xp==='function')xp(5)}};
+window.enemShortFilter=window.enemFeedFilter;window.enemShortShuffle=window.enemFeedRandom;window.enemShortNext=window.enemFeedNext;
+window.enemShortCheck=()=>{};
 window.enemShortQuestionBank=questions;
 })();
