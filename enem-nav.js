@@ -15,7 +15,7 @@ function bottomNav(){const selected=category(tab);document.querySelector('#nav')
 render=function(){
 if(tab==='Desempenho')tab='Estatísticas';
 if(tab==='Matérias'){document.querySelector('#app').innerHTML=hub('Matérias e exercícios','Escolha o conteúdo ou a modalidade de estudo.',[['Questões','❓','Questões objetivas'],['Simulados','📝','Simulados de treino'],['Leitura','📖','Leitura e marcações'],['Curso ENEM','🎓','Resumos e conteúdo do Inep'],['Habilidades','🧠','Competências e habilidades'],['Provas 2024','📄','Cadernos de provas'],['Gabaritos oficiais','✔️','Consulta de respostas']]);}
-else if(tab==='Mais'){document.querySelector('#app').innerHTML=hub('Mais opções','Redação, organização e ferramentas.',[['Redação','✍️','Treino de redação'],['Discursivas','🖊️','Respostas abertas'],['Plano','📅','Planejamento de estudos'],['Dados','💾','Backup, importação e instalação']]);}
+else if(tab==='Mais'){document.querySelector('#app').innerHTML=hub('Discursivas','Acesse as três aulas completas de redação do ENEM e os exercícios de respostas abertas.',[['Discursivas','🖊️','Três aulas, exercícios e progresso']]);}
 else originalRender();
 bottomNav();
 };
