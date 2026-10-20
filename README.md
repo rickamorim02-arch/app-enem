@@ -6,3 +6,4 @@ Aplicativo independente de preparação para o ENEM. Interface inspirada no ATAM
 Conecte este repositório ao projeto Vercel existente e configure Framework Preset como Other, sem build command, com diretório raiz `./`.
 
 Os dados do estudo são armazenados localmente no navegador; faça backups pela aba Dados.
+Publicação automática do APP ENEM pela Vercel.
