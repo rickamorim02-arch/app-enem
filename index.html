@@ -10,7 +10,7 @@ nav#nav button{flex:0 0 auto;white-space:nowrap;min-height:44px;scroll-snap-alig
 body{padding-bottom:calc(90px + env(safe-area-inset-bottom))!important}
 @media(min-width:750px){nav#nav{justify-content:flex-start}nav#nav button{font-size:14px}}
 </style></head><body><header><div class="wrap"><h1>🎓 ENEM • Estúdio de Estudos</h1><small>Seu caminho até a universidade, um passo por vez.</small></div></header><nav id="nav"></nav><aside class="mascot" aria-label="Mascote de progresso"><span class="dog" id="dog">🐶</span><b>Juju</b><div id="xptext" style="font-size:11px">0 XP</div><div class="progress"><div id="xpbar"></div></div></aside><main class="wrap" id="app"></main><footer>V1 • Dados salvos neste navegador • Aplicativo independente e não oficial</footer><script>
-const tabs=['Início','Questões','Simulados','Redação','Leitura','Shorts','Plano','Estatísticas','Dados'];let tab='Início';const areas=['Linguagens','Matemática','Ciências Humanas','Ciências da Natureza'];const seedQuestions=[
+const tabs=['Shorts','Questões','Simulados','Redação','Leitura','Plano','Estatísticas','Dados'];let tab='Shorts';const areas=['Linguagens','Matemática','Ciências Humanas','Ciências da Natureza'];const seedQuestions=[
 {a:1,t:'Uma camiseta custa R$ 80 e recebe desconto de 25%. Qual o preço final?',o:['R$ 55','R$ 60','R$ 65','R$ 70','R$ 75'],c:1,e:'25% de 80 = 20. Portanto, 80 − 20 = 60.'},
 {a:1,t:'Uma receita para 4 pessoas usa 300 g de arroz. Para 10 pessoas, mantendo a proporção, serão necessários:',o:['450 g','600 g','650 g','750 g','900 g'],c:3,e:'300 × 10 ÷ 4 = 750 g.'},
 {a:1,t:'Uma população passou de 2.000 para 2.500 habitantes. O aumento percentual foi:',o:['15%','20%','25%','30%','50%'],c:2,e:'500 ÷ 2000 = 0,25 = 25%.'},
