@@ -3,7 +3,8 @@
 'use strict';
 const groups=[
 {label:'Shorts',icon:'🎬',items:['Shorts']},
-{label:'Matérias',icon:'📚',items:['Matérias','Questões','Simulados','Leitura','Curso ENEM','Habilidades','Provas 2024','Gabaritos oficiais','Área: Linguagens','Área: Humanas','Área: Natureza','Área: Matemática']},
+{label:'Matérias',icon:'📚',items:['Matérias','Questões','Simulados','Curso ENEM','Habilidades','Provas 2024','Gabaritos oficiais','Área: Linguagens','Área: Humanas','Área: Natureza','Área: Matemática']},
+{label:'Leitura',icon:'📖',items:['Leitura']},
 {label:'Desempenho',icon:'📊',items:['Estatísticas']},
 {label:'Discursivas',icon:'✍️',items:['Mais','Redação','Discursivas','Plano','Dados']}
 ];
