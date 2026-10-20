@@ -3,7 +3,7 @@
 'use strict';
 const groups=[
 {label:'Shorts',icon:'🎬',items:['Shorts']},
-{label:'Matérias',icon:'📚',items:['Matérias','Questões','Simulados','Leitura','Curso ENEM','Habilidades','Provas 2024','Gabaritos oficiais']},
+{label:'Matérias',icon:'📚',items:['Matérias','Questões','Simulados','Leitura','Curso ENEM','Habilidades','Provas 2024','Gabaritos oficiais','Área: Linguagens','Área: Humanas','Área: Natureza','Área: Matemática']},
 {label:'Desempenho',icon:'📊',items:['Estatísticas']},
 {label:'Mais',icon:'☰',items:['Mais','Redação','Discursivas','Plano','Dados']}
 ];
@@ -14,7 +14,8 @@ function hub(title,subtitle,items){return '<section class="panel"><h2>'+title+'<
 function bottomNav(){const selected=category(tab);document.querySelector('#nav').innerHTML=groups.map(g=>'<button type="button" class="'+(selected===g.label?'active':'')+'" onclick="go(\''+g.label+'\')" aria-label="'+g.label+'" aria-current="'+(selected===g.label?'page':'false')+'"><span class="enem-nav-icon">'+g.icon+'</span><span>'+g.label+'</span></button>').join('')}
 render=function(){
 if(tab==='Desempenho')tab='Estatísticas';
-if(tab==='Matérias'){document.querySelector('#app').innerHTML=hub('Matérias e exercícios','Escolha o conteúdo ou a modalidade de estudo.',[['Questões','❓','Questões objetivas'],['Simulados','📝','Simulados de treino'],['Leitura','📖','Leitura e marcações'],['Curso ENEM','🎓','Resumos e conteúdo do Inep'],['Habilidades','🧠','Competências e habilidades'],['Provas 2024','📄','Cadernos de provas'],['Gabaritos oficiais','✔️','Consulta de respostas']]);}
+if(tab==='Matérias'){document.querySelector('#app').innerHTML=hub('As quatro áreas do ENEM','Selecione uma área do conhecimento para estudar e responder questões.',[['Área: Linguagens','📖','Linguagens, Códigos e suas Tecnologias'],['Área: Humanas','🌎','Ciências Humanas e suas Tecnologias'],['Área: Natureza','🔬','Ciências da Natureza e suas Tecnologias'],['Área: Matemática','📐','Matemática e suas Tecnologias']]);}
+else if(tab.startsWith('Área: ')){const areaMap={'Área: Linguagens':0,'Área: Matemática':1,'Área: Humanas':2,'Área: Natureza':3};const idx=areaMap[tab];if(idx===undefined){tab='Matérias';render();return}const current=tab;tab='Questões';originalRender();tab=current;const select=document.querySelector('#area');if(select){select.value=String(idx);questionIndex=0;showQuestion()}}
 else if(tab==='Mais'){document.querySelector('#app').innerHTML=hub('Discursivas','Acesse as três aulas completas de redação do ENEM e os exercícios de respostas abertas.',[['Discursivas','🖊️','Três aulas, exercícios e progresso']]);}
 else originalRender();
 bottomNav();
