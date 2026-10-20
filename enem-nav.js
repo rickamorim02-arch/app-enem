@@ -16,7 +16,8 @@ render=function(){
 if(tab==='Desempenho')tab='Estatísticas';
 if(tab==='Matérias'){document.querySelector('#app').innerHTML=hub('As quatro áreas do ENEM','Selecione uma área do conhecimento para estudar e responder questões.',[['Área: Linguagens','📖','Linguagens, Códigos e suas Tecnologias'],['Área: Humanas','🌎','Ciências Humanas e suas Tecnologias'],['Área: Natureza','🔬','Ciências da Natureza e suas Tecnologias'],['Área: Matemática','📐','Matemática e suas Tecnologias']]);}
 else if(tab.startsWith('Área: ')){const areaMap={'Área: Linguagens':0,'Área: Matemática':1,'Área: Humanas':2,'Área: Natureza':3};const idx=areaMap[tab];if(idx===undefined){tab='Matérias';render();return}const current=tab;tab='Questões';originalRender();tab=current;const select=document.querySelector('#area');if(select){select.value=String(idx);questionIndex=0;showQuestion()}}
-else if(tab==='Mais'){tab='Discursivas';originalRender();}
+else if(tab==='Mais'){tab='Discursivas';document.querySelector('#app').innerHTML='';}
+else if(tab==='Discursivas'){document.querySelector('#app').innerHTML='';}
 else originalRender();
 bottomNav();
 };
