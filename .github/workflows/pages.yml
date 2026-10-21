@@ -19,6 +19,29 @@ jobs:
     steps:
       - name: Baixar codigo
         uses: actions/checkout@v4
+      - name: Validar JavaScript e arquivos do aplicativo
+        run: |
+          node --version
+          python3 - <<'PY'
+          from html.parser import HTMLParser
+          from pathlib import Path
+          class Scripts(HTMLParser):
+              def __init__(self):
+                  super().__init__(); self.sources=[]
+              def handle_starttag(self,tag,attrs):
+                  if tag=='script':
+                      source=dict(attrs).get('src')
+                      if source: self.sources.append(source.split('?')[0].removeprefix('./'))
+          parser=Scripts()
+          parser.feed(Path('index.html').read_text())
+          assert len(parser.sources)==len(set(parser.sources)), 'Scripts duplicados no HTML'
+          for file in parser.sources:
+              assert Path(file).is_file(), f'Arquivo inexistente: {file}'
+          assert 'enem-leitura-materias.js' not in parser.sources, 'Modulo antigo de leitura reativado'
+          assert 'enem-offline.js' not in parser.sources, 'Modulo offline duplicado'
+          print('Arquivos ativos verificados:',len(parser.sources))
+          PY
+          for file in *.js; do node --check "$file"; done
       - name: Configurar Pages
         uses: actions/configure-pages@v5
       - name: Preparar arquivos estaticos
