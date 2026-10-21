@@ -6,55 +6,34 @@ const key='enem-shorts-questoes-v15';
 const read=()=>{try{return JSON.parse(localStorage.getItem(key)||'{}')}catch(e){return {}}};
 let areaFilter='Todas',current=0;
 const prev=render;
-let filter='Todas',position=0,statusFilter='Todos',locked=false,activeId=-1;
+let filter='Todas',position=0,mode='Novas',activeId=-1;
 const areas=['Todas','Matemática','Natureza','Linguagens','Humanas'];
-const viewedKey='enem-shorts-vistos-v29';
-function viewed(){try{const obj=JSON.parse(localStorage.getItem(viewedKey)||'{}');return obj&&typeof obj==='object'?obj:{}}catch(e){return {}}}
-function isAnswered(data,i){return !!data[i]&&typeof data[i].correct==='boolean'}
-function isViewed(data,seen,i){return !!seen[i]||isAnswered(data,i)}
-function markViewed(i){const seen=viewed();if(!seen[i]){seen[i]=new Date().toISOString();try{localStorage.setItem(viewedKey,JSON.stringify(seen))}catch(e){}}}
-function list(){const data=read(),seen=viewed();return questions.map((q,i)=>({q,i})).filter(({q,i})=>{
-if(filter!=='Todas'&&q.area!==filter)return false;
-if(statusFilter==='Não vistos'&&isViewed(data,seen,i))return false;
-if(statusFilter==='Vistos'&&!isViewed(data,seen,i))return false;
-if(statusFilter==='Não respondidos'&&isAnswered(data,i))return false;
-if(statusFilter==='Respondidos'&&!isAnswered(data,i))return false;
-if(statusFilter==='Erros'&&data[i]?.correct!==false)return false;
-return true;
-})}
-function count(){const data=read();return questions.reduce((n,q,i)=>n+(isAnswered(data,i)?1:0),0)}
-function summary(){const data=read(),seen=viewed();let seenCount=0;for(let i=0;i<questions.length;i++)if(isViewed(data,seen,i))seenCount++;return {seenCount,answered:count(),unseen:questions.length-seenCount}}
+const answered=(data,i)=>!!data[i]&&typeof data[i].correct==='boolean';
+function list(){const data=read();return questions.map((q,i)=>({q,i})).filter(({q,i})=>(filter==='Todas'||q.area===filter)&&(mode==='Todas'||(mode==='Novas'&&!answered(data,i))||(mode==='Feitas'&&answered(data,i))||(mode==='Erros'&&data[i]?.correct===false)))}
+function summary(){const data=read();const done=questions.reduce((n,q,i)=>n+(answered(data,i)?1:0),0);return {done,pending:questions.length-done}}
+function updateHeader(){const sum=summary(),total=document.getElementById('enemFeedTotals');if(total)total.textContent=sum.done+' feitas · '+sum.pending+' disponíveis';const counter=document.getElementById('enemFeedCounter');if(counter)counter.textContent=(Math.min(position+1,list().length))+'/'+list().length}
 function paint(){
-const items=list(),item=items[position]||items[0],slot=document.getElementById('enemFeedCard');if(!slot)return;
-const counter=document.getElementById('enemFeedCounter'),totals=document.getElementById('enemFeedTotals');
-const info=summary();if(totals)totals.textContent='👁 '+info.seenCount+' vistos · ✨ '+info.unseen+' não vistos · ✓ '+info.answered+' respondidos';
-if(!item){activeId=-1;slot.innerHTML='<div class="enem-feed-empty">Nenhuma questão neste filtro. Selecione outra situação ou matéria.</div>';if(counter)counter.textContent='0/0';return}
-activeId=item.i;const q=item.q,record=read()[item.i],wasViewed=isViewed(read(),viewed(),item.i);
-if(counter)counter.textContent=(position+1)+'/'+items.length+' · '+(record?'Respondido':wasViewed?'Visto':'Novo');
-slot.innerHTML='<div class="enem-feed-meta">'+esc(q.area)+' · Capítulo '+q.num+' · Nível '+q.level+' · '+(record?'✓ Respondido':wasViewed?'👁 Visto':'✨ Não visto')+'</div><h2>'+esc(q.q)+'</h2><div class="enem-feed-options">'+q.opts.map((opt,i)=>'<button type="button" class="enem-feed-option" data-answer="'+i+'" onclick="enemFeedAnswer('+item.i+','+i+')" '+(record?'disabled':'')+'>'+String.fromCharCode(65+i)+') '+esc(opt)+'</button>').join('')+'</div><div class="enem-feed-feedback" role="status" id="enemFeedFeedback"></div>';
-if(record)feedback(q,record.answer,record.correct);
-markViewed(item.i);
+const items=list(),item=items[position],slot=document.getElementById('enemFeedCard');if(!slot)return;updateHeader();
+if(!item){activeId=-1;slot.innerHTML='<div class="enem-feed-empty">Você concluiu todas as questões desta seleção! Escolha outra matéria ou toque em Feitas para revisar.</div>';return}
+activeId=item.i;const q=item.q,record=read()[item.i];
+slot.innerHTML='<div class="enem-feed-meta">'+esc(q.area)+' · Capítulo '+q.num+' · Nível '+q.level+' · '+(record?'✓ Feita':'● Nova')+'</div><h2>'+esc(q.q)+'</h2><div class="enem-feed-options">'+q.opts.map((opt,i)=>'<button type="button" class="enem-feed-option" data-answer="'+i+'" onclick="enemFeedAnswer('+item.i+','+i+')" '+(record?'disabled':'')+'>'+String.fromCharCode(65+i)+') '+esc(opt)+'</button>').join('')+'</div><div class="enem-feed-feedback" role="status" id="enemFeedFeedback"></div>';
+if(record)feedback(q,record.answer,record.correct)
 }
-function feedback(q,answer,correct){
-const slot=document.getElementById('enemFeedFeedback');if(!slot)return;
-document.querySelectorAll('.enem-feed-option').forEach(el=>{const n=Number(el.dataset.answer);el.disabled=true;if(n===q.right)el.classList.add('ok');else if(n===answer)el.classList.add('no')});
-slot.innerHTML='<strong>'+(correct?'✓ Correto':'✗ Incorreto')+' · Gabarito '+String.fromCharCode(65+q.right)+'</strong><p>'+esc(q.why)+'</p>';
-}
-function next(delta){const items=list();if(!items.length)return;position=(position+delta+items.length)%items.length;paint()}
+function feedback(q,answer,correct){const slot=document.getElementById('enemFeedFeedback');if(!slot)return;document.querySelectorAll('.enem-feed-option').forEach(el=>{const n=Number(el.dataset.answer);el.disabled=true;if(n===q.right)el.classList.add('ok');else if(n===answer)el.classList.add('no')});slot.innerHTML='<strong>'+(correct?'✓ Correto':'✗ Incorreto')+' · Gabarito '+String.fromCharCode(65+q.right)+'</strong><p>'+esc(q.why)+'</p>'}
+function next(delta){const items=list();if(!items.length){paint();return}position=(position+delta+items.length)%items.length;paint()}
 function layout(){
 const app=document.querySelector('#app');if(!app)return;
-const statuses=['Todos','Não vistos','Vistos','Não respondidos','Respondidos','Erros'];
-app.innerHTML='<div class="enem-feed"><div class="enem-feed-top"><strong>🎬 Shorts ENEM</strong><span id="enemFeedCounter"></span></div><div id="enemFeedTotals" style="font-size:12px;color:#b7cbe3"></div><div class="enem-feed-filters"><select id="enemFeedArea" aria-label="Filtrar matéria" onchange="enemFeedFilter(this.value)">'+areas.map(a=>'<option value="'+a+'" '+(a===filter?'selected':'')+'>'+a+'</option>').join('')+'</select><select id="enemFeedStatus" aria-label="Filtrar vistos e não vistos" onchange="enemFeedStatus(this.value)">'+statuses.map(a=>'<option value="'+a+'" '+(a===statusFilter?'selected':'')+'>'+a+'</option>').join('')+'</select><button type="button" aria-label="Sortear questão" onclick="enemFeedRandom()">🔀</button></div><div class="enem-feed-card" id="enemFeedCard"></div><div class="enem-feed-controls"><button type="button" onclick="enemFeedPrev()">↑ Anterior</button><span>Deslize para avançar</span><button type="button" onclick="enemFeedNext()">Próximo ↓</button></div></div>';
-const feed=app.querySelector('.enem-feed');let startY=0,startX=0;feed.addEventListener('touchstart',e=>{startY=e.touches[0].clientY;startX=e.touches[0].clientX},{passive:true});feed.addEventListener('touchend',e=>{const dy=e.changedTouches[0].clientY-startY,dx=e.changedTouches[0].clientX-startX;if(Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.3&&!(e.target.closest('.enem-feed-options')&&Math.abs(dy)<100))next(dy<0?1:-1)},{passive:true});paint()
+app.innerHTML='<div class="enem-feed"><div class="enem-feed-top"><strong>🎬 Shorts ENEM</strong><span id="enemFeedTotals"></span></div><div class="enem-feed-modes" role="group" aria-label="Situação das questões">'+['Novas','Feitas','Erros','Todas'].map(m=>'<button type="button" class="enem-feed-mode '+(mode===m?'selected':'')+'" onclick="enemFeedMode(\''+m+'\')">'+m+'</button>').join('')+'</div><div class="enem-feed-filters"><select id="enemFeedArea" aria-label="Filtrar matéria" onchange="enemFeedFilter(this.value)">'+areas.map(a=>'<option value="'+a+'" '+(a===filter?'selected':'')+'>'+a+'</option>').join('')+'</select><button type="button" aria-label="Sortear questão" onclick="enemFeedRandom()">🔀</button></div><div class="enem-feed-card" id="enemFeedCard"></div><div class="enem-feed-controls"><button type="button" onclick="enemFeedPrev()">↑ Anterior</button><span id="enemFeedCounter"></span><button type="button" onclick="enemFeedNext()">Próximo ↓</button></div></div>';
+const feed=app.querySelector('.enem-feed');let y=0,x=0;feed.addEventListener('touchstart',e=>{y=e.touches[0].clientY;x=e.touches[0].clientX},{passive:true});feed.addEventListener('touchend',e=>{const dy=e.changedTouches[0].clientY-y,dx=e.changedTouches[0].clientX-x;if(Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.3)next(dy<0?1:-1)},{passive:true});paint()
 }
 render=function(){prev();if(tab==='Shorts')layout()};
 window.enemFeedFilter=a=>{filter=a;position=0;paint()};
-window.enemFeedStatus=a=>{statusFilter=a;position=0;paint()};
-window.enemFeedWrong=()=>{statusFilter='Erros';position=0;layout()};
+window.enemFeedMode=a=>{mode=a;position=0;layout()};
+window.enemFeedStatus=a=>window.enemFeedMode(a==='Respondidos'?'Feitas':a==='Erros'?'Erros':'Novas');
+window.enemFeedWrong=()=>window.enemFeedMode('Erros');
 window.enemFeedRandom=()=>{const n=list().length;if(n){position=Math.floor(Math.random()*n);paint()}};
 window.enemFeedPrev=()=>next(-1);window.enemFeedNext=()=>next(1);
-window.enemFeedAnswer=(id,answer)=>{if(locked)return;if(activeId!==id)return;const item={q:questions[id],i:id};const data=read();if(isAnswered(data,id))return;const correct=answer===item.q.right;data[id]={answer,correct,at:new Date().toISOString()};try{localStorage.setItem(key,JSON.stringify(data))}catch(e){}feedback(item.q,answer,correct);const counter=document.getElementById('enemFeedCounter');if(counter)counter.textContent=(position+1)+'/'+list().length+' · Respondido';const totals=document.getElementById('enemFeedTotals'),info=summary();if(totals)totals.textContent='👁 '+info.seenCount+' vistos · ✨ '+info.unseen+' não vistos · ✓ '+info.answered+' respondidos';if(correct){window.dispatchEvent(new CustomEvent('enem-energia',{detail:{tipo:'questao'}}));if(typeof xp==='function')xp(5)}};
-window.enemShortFilter=window.enemFeedFilter;window.enemShortShuffle=window.enemFeedRandom;window.enemShortNext=window.enemFeedNext;
-window.enemShortCheck=()=>{};
+window.enemFeedAnswer=(id,answer)=>{if(activeId!==id)return;const q=questions[id],data=read();if(answered(data,id))return;const correct=answer===q.right;data[id]={answer,correct,at:new Date().toISOString()};try{localStorage.setItem(key,JSON.stringify(data))}catch(e){}feedback(q,answer,correct);updateHeader();if(correct){window.dispatchEvent(new CustomEvent('enem-energia',{detail:{tipo:'questao'}}));if(typeof xp==='function')xp(5)}};
+window.enemShortFilter=window.enemFeedFilter;window.enemShortShuffle=window.enemFeedRandom;window.enemShortNext=window.enemFeedNext;window.enemShortCheck=()=>{};
 window.enemShortQuestionBank=questions;
 })();
