@@ -10,11 +10,16 @@ let filter='Todas',position=0,mode='Novas',activeId=-1;
 const areas=['Todas','Matemática','Natureza','Linguagens','Humanas'];
 const answered=(data,i)=>!!data[i]&&typeof data[i].correct==='boolean';
 function list(){const data=read();return questions.map((q,i)=>({q,i})).filter(({q,i})=>(filter==='Todas'||q.area===filter)&&(mode==='Todas'||(mode==='Novas'&&!answered(data,i))||(mode==='Feitas'&&answered(data,i))||(mode==='Erros'&&data[i]?.correct===false)))}
-function summary(){const data=read();const done=questions.reduce((n,q,i)=>n+(answered(data,i)?1:0),0);return {done,pending:questions.length-done}}
-function updateHeader(){const sum=summary(),total=document.getElementById('enemFeedTotals');if(total)total.textContent=sum.done+' feitas · '+sum.pending+' disponíveis';const counter=document.getElementById('enemFeedCounter');if(counter)counter.textContent=(Math.min(position+1,list().length))+'/'+list().length}
+function summary(){const data=read();let done=0,areaDone=0,areaTotal=0;for(let i=0;i<questions.length;i++){if(answered(data,i))done++;if(filter==='Todas'||questions[i].area===filter){areaTotal++;if(answered(data,i))areaDone++}}return {done,pending:questions.length-done,areaDone,areaTotal}}
+function updateHeader(){const sum=summary(),total=document.getElementById('enemFeedTotals');if(total)total.textContent=filter==='Todas'?(sum.done+' feitas no total · '+sum.pending+' disponíveis'):(sum.areaDone+' feitas em '+filter+' · '+(sum.areaTotal-sum.areaDone)+' disponíveis');const items=list(),counter=document.getElementById('enemFeedCounter');if(counter)counter.textContent=items.length?(Math.min(position+1,items.length)+'/'+items.length):'0/0';const controls=document.querySelectorAll('.enem-feed-controls-v37 button');controls.forEach(b=>{b.disabled=!items.length;b.setAttribute('aria-disabled',String(!items.length))})}
 function paint(){
 const items=list(),item=items[position],slot=document.getElementById('enemFeedCard');if(!slot)return;updateHeader();
-if(!item){activeId=-1;slot.innerHTML='<div class="enem-feed-empty">Você concluiu todas as questões desta seleção! Escolha outra matéria ou toque em Feitas para revisar.</div>';return}
+if(!item){activeId=-1;const subject=filter==='Todas'?'nesta seleção':'em '+filter;let msg;
+if(mode==='Feitas')msg='Você ainda não respondeu nenhuma questão '+subject+'. Selecione Novas para começar.';
+else if(mode==='Erros')msg='Você não tem questões erradas '+subject+'.';
+else if(mode==='Novas')msg='Você já respondeu todas as questões '+subject+'. Use Feitas para revisar.';
+else msg='Nenhuma questão encontrada '+subject+'. Selecione outra matéria.';
+slot.innerHTML='<div class="enem-feed-empty">'+esc(msg)+'</div>';return}
 activeId=item.i;const q=item.q,record=read()[item.i];
 slot.innerHTML='<div class="enem-feed-meta">'+esc(q.area)+' · Capítulo '+q.num+' · Nível '+q.level+' · '+(record?'✓ Feita':'● Nova')+'</div><h2>'+esc(q.q)+'</h2><div class="enem-feed-options">'+q.opts.map((opt,i)=>'<button type="button" class="enem-feed-option" data-answer="'+i+'" onclick="enemFeedAnswer('+item.i+','+i+')" '+(record?'disabled':'')+'>'+String.fromCharCode(65+i)+') '+esc(opt)+'</button>').join('')+'</div><div class="enem-feed-feedback" role="status" id="enemFeedFeedback"></div>';
 if(record)feedback(q,record.answer,record.correct)
