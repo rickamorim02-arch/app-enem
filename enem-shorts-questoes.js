@@ -38,7 +38,7 @@ window.enemFeedStatus=a=>window.enemFeedMode(a==='Respondidos'?'Feitas':a==='Err
 window.enemFeedWrong=()=>window.enemFeedMode('Erros');
 window.enemFeedRandom=()=>{const n=list().length;if(n){position=Math.floor(Math.random()*n);paint()}};
 window.enemFeedPrev=()=>next(-1);window.enemFeedNext=()=>next(1);
-window.enemFeedAnswer=(id,answer)=>{if(activeId!==id)return;const q=questions[id],data=read();if(answered(data,id))return;const correct=answer===q.right;data[id]={answer,correct,at:new Date().toISOString()};try{localStorage.setItem(key,JSON.stringify(data))}catch(e){}feedback(q,answer,correct);updateHeader();if(correct){window.dispatchEvent(new CustomEvent('enem-energia',{detail:{tipo:'questao'}}));if(typeof xp==='function')xp(5)}};
+window.enemFeedAnswer=(id,answer)=>{if(activeId!==id)return;const q=questions[id],data=read();if(answered(data,id))return;const correct=answer===q.right;data[id]={answer,correct,at:new Date().toISOString()};try{localStorage.setItem(key,JSON.stringify(data))}catch(e){}feedback(q,answer,correct);updateHeader();window.dispatchEvent(new CustomEvent('enem-energia',{detail:{tipo:'questao',acertou:correct}}));if(correct&&typeof xp==='function')xp(5)};
 window.enemShortFilter=window.enemFeedFilter;window.enemShortShuffle=window.enemFeedRandom;window.enemShortNext=window.enemFeedNext;window.enemShortCheck=()=>{};
 window.enemShortQuestionBank=questions;
 })();
