@@ -7,3 +7,8 @@ Conecte este repositório ao projeto Vercel existente e configure Framework Pres
 
 Os dados do estudo são armazenados localmente no navegador; faça backups pela aba Dados.
 Publicação automática do APP ENEM pela Vercel.
+
+## GitHub Pages
+
+Publicação estática automática pela GitHub Actions, a partir da branch `main`.
+Endereço: https://rickamorim02-arch.github.io/app-enem/
