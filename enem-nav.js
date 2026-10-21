@@ -6,6 +6,12 @@ const groups=[
 {label:'Leitura',icon:'📖',items:['Leitura','Leitura - Linguagens','Leitura - Humanas','Leitura - Natureza','Leitura - Matemática','Leitura - Redação']},
 {label:'Mais',icon:'☰',items:['Mais','Desempenho','Estatísticas','Discursivas','Redação','Plano','Dados']}
 ];
+
+const offlineFiles=['./','./index.html','./enem-inep-2026.js','./enem-habilidades-2026.js','./enem-gabaritos-2024.js','./enem-provas-2024.js','./mascot-3d.js','./enem-nav.js','./enem-aulas-redacao.js','./enem-100-temas.js','./enem-36-aulas-encceja.js','./enem-leitura-unificada.js','./enem-shorts-questoes.js','./enem-shorts-856-extra.js','./enem-redacoes-desempenho.js','./manifest.webmanifest','./icon.svg'];
+const offlineCache='enem-offline-v51';
+async function offlineCheck(){const el=document.getElementById('enemOfflineStatus');if(!el)return;if(!('caches'in window)){el.textContent='Navegador sem suporte a armazenamento offline.';return}try{const cache=await caches.open(offlineCache);const items=await Promise.all(offlineFiles.map(p=>cache.match(new URL(p,location.href))));const n=items.filter(Boolean).length;el.textContent=(navigator.onLine?'🟢 Com internet':'📴 Sem internet')+' · '+n+'/'+offlineFiles.length+' arquivos preparados'+(n===offlineFiles.length?' · Pronto para uso offline':'')}catch(e){el.textContent='Não foi possível verificar o armazenamento offline.'}}
+window.enemPrepareOffline=async function(){const el=document.getElementById('enemOfflineStatus');if(!el)return;if(!navigator.onLine){el.textContent='Conecte-se à internet para preparar o modo offline.';return}try{const cache=await caches.open(offlineCache);let n=0;for(const p of offlineFiles){const url=new URL(p,location.href);const response=await fetch(url.href,{cache:'reload'});if(!response.ok)throw Error(p);await cache.put(url.href,response);el.textContent='Baixando arquivos: '+(++n)+'/'+offlineFiles.length}el.textContent='✅ Modo offline preparado: '+n+' arquivos disponíveis neste aparelho.'}catch(e){el.textContent='Falha ao baixar um arquivo ('+e.message+'). Tente novamente com internet.'}};
+window.addEventListener('online',offlineCheck);window.addEventListener('offline',offlineCheck);
 const originalRender=render;
 function category(t){return groups.find(g=>g.items.includes(t))?.label||'Mais'}
 function sectionButton(t,emoji,desc){return '<button class="enem-section" type="button" onclick="go(\''+t+'\')"><span class="enem-section-icon">'+emoji+'</span><span><strong>'+t+'</strong><small>'+desc+'</small></span><span aria-hidden="true">›</span></button>'}
@@ -20,5 +26,6 @@ else if(tab==='Mais'){document.querySelector('#app').innerHTML=hub('Mais','Acomp
 else if(tab==='Discursivas'){document.querySelector('#app').innerHTML='<section class="panel"><button type="button" onclick="go(\'Mais\')">← Mais</button></section>';}
 else originalRender();
 bottomNav();
+if(tab==='Mais')offlineCheck();
 };
 })();
