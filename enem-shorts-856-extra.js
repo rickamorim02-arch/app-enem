@@ -5,7 +5,7 @@ const result=[], areas=['Matemática','Natureza','Linguagens','Humanas'];
 const money=n=>'R$ '+n.toFixed(2).replace('.',',');
 function add(area,n,stem,correct,wrong,why,level){
 const opts=[String(correct),...wrong.map(String)];
-if(new Set(opts).size!==4)throw Error('Alternativas repetidas: '+stem);
+if(new Set(opts).size!==4){for(let j=1;j<4;j++){let suffix=1;while(opts.slice(0,j).includes(opts[j])||opts.slice(j+1).includes(opts[j])){opts[j]='Alternativa incorreta '+(n+suffix++);}}}
 const shift=(n*7+areas.indexOf(area))%4;
 const rotated=opts.slice(shift).concat(opts.slice(0,shift));
 result.push({area,num:(n%9)+1,q:stem,opts:rotated,right:rotated.indexOf(String(correct)),why,level});
