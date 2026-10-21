@@ -6,7 +6,7 @@ const key='enem-shorts-questoes-v15';
 const read=()=>{try{return JSON.parse(localStorage.getItem(key)||'{}')}catch(e){return {}}};
 let areaFilter='Todas',current=0;
 const prev=render;
-let filter='Todas',position=0,statusFilter='Todos',locked=false;
+let filter='Todas',position=0,statusFilter='Todos',locked=false,activeId=-1;
 const areas=['Todas','Matemática','Natureza','Linguagens','Humanas'];
 const viewedKey='enem-shorts-vistos-v29';
 function viewed(){try{const obj=JSON.parse(localStorage.getItem(viewedKey)||'{}');return obj&&typeof obj==='object'?obj:{}}catch(e){return {}}}
@@ -28,8 +28,8 @@ function paint(){
 const items=list(),item=items[position]||items[0],slot=document.getElementById('enemFeedCard');if(!slot)return;
 const counter=document.getElementById('enemFeedCounter'),totals=document.getElementById('enemFeedTotals');
 const info=summary();if(totals)totals.textContent='👁 '+info.seenCount+' vistos · ✨ '+info.unseen+' não vistos · ✓ '+info.answered+' respondidos';
-if(!item){slot.innerHTML='<div class="enem-feed-empty">Nenhuma questão neste filtro. Selecione outra situação ou matéria.</div>';if(counter)counter.textContent='0/0';return}
-const q=item.q,record=read()[item.i],wasViewed=isViewed(read(),viewed(),item.i);
+if(!item){activeId=-1;slot.innerHTML='<div class="enem-feed-empty">Nenhuma questão neste filtro. Selecione outra situação ou matéria.</div>';if(counter)counter.textContent='0/0';return}
+activeId=item.i;const q=item.q,record=read()[item.i],wasViewed=isViewed(read(),viewed(),item.i);
 if(counter)counter.textContent=(position+1)+'/'+items.length+' · '+(record?'Respondido':wasViewed?'Visto':'Novo');
 slot.innerHTML='<div class="enem-feed-meta">'+esc(q.area)+' · Capítulo '+q.num+' · Nível '+q.level+' · '+(record?'✓ Respondido':wasViewed?'👁 Visto':'✨ Não visto')+'</div><h2>'+esc(q.q)+'</h2><div class="enem-feed-options">'+q.opts.map((opt,i)=>'<button type="button" class="enem-feed-option" data-answer="'+i+'" onclick="enemFeedAnswer('+item.i+','+i+')" '+(record?'disabled':'')+'>'+String.fromCharCode(65+i)+') '+esc(opt)+'</button>').join('')+'</div><div class="enem-feed-feedback" role="status" id="enemFeedFeedback"></div>';
 if(record)feedback(q,record.answer,record.correct);
@@ -53,7 +53,7 @@ window.enemFeedStatus=a=>{statusFilter=a;position=0;paint()};
 window.enemFeedWrong=()=>{statusFilter='Erros';position=0;layout()};
 window.enemFeedRandom=()=>{const n=list().length;if(n){position=Math.floor(Math.random()*n);paint()}};
 window.enemFeedPrev=()=>next(-1);window.enemFeedNext=()=>next(1);
-window.enemFeedAnswer=(id,answer)=>{if(locked)return;const item=list()[position];if(!item||item.i!==id)return;const data=read();if(isAnswered(data,id))return;const correct=answer===item.q.right;data[id]={answer,correct,at:new Date().toISOString()};try{localStorage.setItem(key,JSON.stringify(data))}catch(e){}feedback(item.q,answer,correct);const counter=document.getElementById('enemFeedCounter');if(counter)counter.textContent=(position+1)+'/'+list().length+' · Respondido';const totals=document.getElementById('enemFeedTotals'),info=summary();if(totals)totals.textContent='👁 '+info.seenCount+' vistos · ✨ '+info.unseen+' não vistos · ✓ '+info.answered+' respondidos';if(correct){window.dispatchEvent(new CustomEvent('enem-energia',{detail:{tipo:'questao'}}));if(typeof xp==='function')xp(5)}};
+window.enemFeedAnswer=(id,answer)=>{if(locked)return;if(activeId!==id)return;const item={q:questions[id],i:id};const data=read();if(isAnswered(data,id))return;const correct=answer===item.q.right;data[id]={answer,correct,at:new Date().toISOString()};try{localStorage.setItem(key,JSON.stringify(data))}catch(e){}feedback(item.q,answer,correct);const counter=document.getElementById('enemFeedCounter');if(counter)counter.textContent=(position+1)+'/'+list().length+' · Respondido';const totals=document.getElementById('enemFeedTotals'),info=summary();if(totals)totals.textContent='👁 '+info.seenCount+' vistos · ✨ '+info.unseen+' não vistos · ✓ '+info.answered+' respondidos';if(correct){window.dispatchEvent(new CustomEvent('enem-energia',{detail:{tipo:'questao'}}));if(typeof xp==='function')xp(5)}};
 window.enemShortFilter=window.enemFeedFilter;window.enemShortShuffle=window.enemFeedRandom;window.enemShortNext=window.enemFeedNext;
 window.enemShortCheck=()=>{};
 window.enemShortQuestionBank=questions;
