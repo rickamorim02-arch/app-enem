@@ -6,16 +6,34 @@ const key='enem-shorts-questoes-v15';
 const read=()=>{try{return JSON.parse(localStorage.getItem(key)||'{}')}catch(e){return {}}};
 let areaFilter='Todas',current=0;
 const prev=render;
-let filter='Todas',position=0,wrongOnly=false,locked=false;
+let filter='Todas',position=0,statusFilter='Todos',locked=false;
 const areas=['Todas','Matemática','Natureza','Linguagens','Humanas'];
-function list(){const data=read();return questions.map((q,i)=>({q,i})).filter(({q,i})=>(filter==='Todas'||q.area===filter)&&(!wrongOnly||data[i]?.correct===false))}
-function count(){const data=read();return Object.values(data).filter(x=>x&&typeof x.correct==='boolean').length}
+const viewedKey='enem-shorts-vistos-v29';
+function viewed(){try{const obj=JSON.parse(localStorage.getItem(viewedKey)||'{}');return obj&&typeof obj==='object'?obj:{}}catch(e){return {}}}
+function isAnswered(data,i){return !!data[i]&&typeof data[i].correct==='boolean'}
+function isViewed(data,seen,i){return !!seen[i]||isAnswered(data,i)}
+function markViewed(i){const seen=viewed();if(!seen[i]){seen[i]=new Date().toISOString();try{localStorage.setItem(viewedKey,JSON.stringify(seen))}catch(e){}}}
+function list(){const data=read(),seen=viewed();return questions.map((q,i)=>({q,i})).filter(({q,i})=>{
+if(filter!=='Todas'&&q.area!==filter)return false;
+if(statusFilter==='Não vistos'&&isViewed(data,seen,i))return false;
+if(statusFilter==='Vistos'&&!isViewed(data,seen,i))return false;
+if(statusFilter==='Não respondidos'&&isAnswered(data,i))return false;
+if(statusFilter==='Respondidos'&&!isAnswered(data,i))return false;
+if(statusFilter==='Erros'&&data[i]?.correct!==false)return false;
+return true;
+})}
+function count(){const data=read();return questions.reduce((n,q,i)=>n+(isAnswered(data,i)?1:0),0)}
+function summary(){const data=read(),seen=viewed();let seenCount=0;for(let i=0;i<questions.length;i++)if(isViewed(data,seen,i))seenCount++;return {seenCount,answered:count(),unseen:questions.length-seenCount}}
 function paint(){
 const items=list(),item=items[position]||items[0],slot=document.getElementById('enemFeedCard');if(!slot)return;
-if(!item){slot.innerHTML='<div class="enem-feed-empty">Não há questões neste filtro. Altere a matéria ou desative a revisão de erros.</div>';document.getElementById('enemFeedCounter').textContent='0/0';return}
-const q=item.q,record=read()[item.i];document.getElementById('enemFeedCounter').textContent=(position+1)+'/'+items.length+' · '+count()+' respondidas';
-slot.innerHTML='<div class="enem-feed-meta">'+esc(q.area)+' · Capítulo '+q.num+' · Nível '+q.level+'</div><h2>'+esc(q.q)+'</h2><div class="enem-feed-options">'+q.opts.map((opt,i)=>'<button type="button" class="enem-feed-option" data-answer="'+i+'" onclick="enemFeedAnswer('+item.i+','+i+')" '+(record?'disabled':'')+'>'+String.fromCharCode(65+i)+') '+esc(opt)+'</button>').join('')+'</div><div class="enem-feed-feedback" role="status" id="enemFeedFeedback"></div>';
+const counter=document.getElementById('enemFeedCounter'),totals=document.getElementById('enemFeedTotals');
+const info=summary();if(totals)totals.textContent='👁 '+info.seenCount+' vistos · ✨ '+info.unseen+' não vistos · ✓ '+info.answered+' respondidos';
+if(!item){slot.innerHTML='<div class="enem-feed-empty">Nenhuma questão neste filtro. Selecione outra situação ou matéria.</div>';if(counter)counter.textContent='0/0';return}
+const q=item.q,record=read()[item.i],wasViewed=isViewed(read(),viewed(),item.i);
+if(counter)counter.textContent=(position+1)+'/'+items.length+' · '+(record?'Respondido':wasViewed?'Visto':'Novo');
+slot.innerHTML='<div class="enem-feed-meta">'+esc(q.area)+' · Capítulo '+q.num+' · Nível '+q.level+' · '+(record?'✓ Respondido':wasViewed?'👁 Visto':'✨ Não visto')+'</div><h2>'+esc(q.q)+'</h2><div class="enem-feed-options">'+q.opts.map((opt,i)=>'<button type="button" class="enem-feed-option" data-answer="'+i+'" onclick="enemFeedAnswer('+item.i+','+i+')" '+(record?'disabled':'')+'>'+String.fromCharCode(65+i)+') '+esc(opt)+'</button>').join('')+'</div><div class="enem-feed-feedback" role="status" id="enemFeedFeedback"></div>';
 if(record)feedback(q,record.answer,record.correct);
+markViewed(item.i);
 }
 function feedback(q,answer,correct){
 const slot=document.getElementById('enemFeedFeedback');if(!slot)return;
@@ -25,15 +43,17 @@ slot.innerHTML='<strong>'+(correct?'✓ Correto':'✗ Incorreto')+' · Gabarito 
 function next(delta){const items=list();if(!items.length)return;position=(position+delta+items.length)%items.length;paint()}
 function layout(){
 const app=document.querySelector('#app');if(!app)return;
-app.innerHTML='<div class="enem-feed"><div class="enem-feed-top"><strong>🎬 Shorts ENEM</strong><span id="enemFeedCounter"></span></div><div class="enem-feed-filters"><select id="enemFeedArea" aria-label="Filtrar matéria" onchange="enemFeedFilter(this.value)">'+areas.map(a=>'<option value="'+a+'" '+(a===filter?'selected':'')+'>'+a+'</option>').join('')+'</select><button type="button" onclick="enemFeedWrong()" id="enemWrongToggle">'+(wrongOnly?'✓ Revisando erros':'Revisar erros')+'</button><button type="button" onclick="enemFeedRandom()">🔀</button></div><div class="enem-feed-card" id="enemFeedCard"></div><div class="enem-feed-controls"><button type="button" onclick="enemFeedPrev()">↑ Anterior</button><span>Deslize para avançar</span><button type="button" onclick="enemFeedNext()">Próximo ↓</button></div></div>';
+const statuses=['Todos','Não vistos','Vistos','Não respondidos','Respondidos','Erros'];
+app.innerHTML='<div class="enem-feed"><div class="enem-feed-top"><strong>🎬 Shorts ENEM</strong><span id="enemFeedCounter"></span></div><div id="enemFeedTotals" style="font-size:12px;color:#b7cbe3"></div><div class="enem-feed-filters"><select id="enemFeedArea" aria-label="Filtrar matéria" onchange="enemFeedFilter(this.value)">'+areas.map(a=>'<option value="'+a+'" '+(a===filter?'selected':'')+'>'+a+'</option>').join('')+'</select><select id="enemFeedStatus" aria-label="Filtrar vistos e não vistos" onchange="enemFeedStatus(this.value)">'+statuses.map(a=>'<option value="'+a+'" '+(a===statusFilter?'selected':'')+'>'+a+'</option>').join('')+'</select><button type="button" aria-label="Sortear questão" onclick="enemFeedRandom()">🔀</button></div><div class="enem-feed-card" id="enemFeedCard"></div><div class="enem-feed-controls"><button type="button" onclick="enemFeedPrev()">↑ Anterior</button><span>Deslize para avançar</span><button type="button" onclick="enemFeedNext()">Próximo ↓</button></div></div>';
 const feed=app.querySelector('.enem-feed');let startY=0,startX=0;feed.addEventListener('touchstart',e=>{startY=e.touches[0].clientY;startX=e.touches[0].clientX},{passive:true});feed.addEventListener('touchend',e=>{const dy=e.changedTouches[0].clientY-startY,dx=e.changedTouches[0].clientX-startX;if(Math.abs(dy)>65&&Math.abs(dy)>Math.abs(dx)*1.3&&!(e.target.closest('.enem-feed-options')&&Math.abs(dy)<100))next(dy<0?1:-1)},{passive:true});paint()
 }
 render=function(){prev();if(tab==='Shorts')layout()};
 window.enemFeedFilter=a=>{filter=a;position=0;paint()};
-window.enemFeedWrong=()=>{wrongOnly=!wrongOnly;position=0;layout()};
+window.enemFeedStatus=a=>{statusFilter=a;position=0;paint()};
+window.enemFeedWrong=()=>{statusFilter='Erros';position=0;layout()};
 window.enemFeedRandom=()=>{const n=list().length;if(n){position=Math.floor(Math.random()*n);paint()}};
 window.enemFeedPrev=()=>next(-1);window.enemFeedNext=()=>next(1);
-window.enemFeedAnswer=(id,answer)=>{if(locked)return;const item=list()[position];if(!item||item.i!==id)return;const data=read();if(data[id])return;const correct=answer===item.q.right;data[id]={answer,correct,at:new Date().toISOString()};try{localStorage.setItem(key,JSON.stringify(data))}catch(e){}feedback(item.q,answer,correct);document.getElementById('enemFeedCounter').textContent=(position+1)+'/'+list().length+' · '+count()+' respondidas';if(correct){window.dispatchEvent(new CustomEvent('enem-energia',{detail:{tipo:'questao'}}));if(typeof xp==='function')xp(5)}};
+window.enemFeedAnswer=(id,answer)=>{if(locked)return;const item=list()[position];if(!item||item.i!==id)return;const data=read();if(isAnswered(data,id))return;const correct=answer===item.q.right;data[id]={answer,correct,at:new Date().toISOString()};try{localStorage.setItem(key,JSON.stringify(data))}catch(e){}feedback(item.q,answer,correct);const counter=document.getElementById('enemFeedCounter');if(counter)counter.textContent=(position+1)+'/'+list().length+' · Respondido';const totals=document.getElementById('enemFeedTotals'),info=summary();if(totals)totals.textContent='👁 '+info.seenCount+' vistos · ✨ '+info.unseen+' não vistos · ✓ '+info.answered+' respondidos';if(correct){window.dispatchEvent(new CustomEvent('enem-energia',{detail:{tipo:'questao'}}));if(typeof xp==='function')xp(5)}};
 window.enemShortFilter=window.enemFeedFilter;window.enemShortShuffle=window.enemFeedRandom;window.enemShortNext=window.enemFeedNext;
 window.enemShortCheck=()=>{};
 window.enemShortQuestionBank=questions;
