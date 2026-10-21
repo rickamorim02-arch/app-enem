@@ -53,7 +53,28 @@ nav#nav button{flex:1 1 20%!important;min-width:0!important;max-width:180px;min-
 .enem-feed-controls{display:flex;flex-wrap:wrap;gap:8px;padding:8px 0 20px}
 .enem-feed-controls button{min-height:45px}
 body:has(.enem-feed) #mascot,body:has(.enem-feed) .enem-mascot,body:has(.enem-feed) .mascot,body:has(.enem-feed) #enemMascot{display:none!important}
-</style><style id="enem-shorts-v32">.enem-feed-position{text-align:center;color:#9fb6d2;font-size:12px;padding:8px 0 12px}.enem-feed-controls{display:none!important}</style></head><body><header><div class="wrap"><h1>🎓 ENEM • Estúdio de Estudos</h1><small>Seu caminho até a universidade, um passo por vez.</small></div></header><nav id="nav"></nav><main class="wrap" id="app"></main><footer>V1 • Dados salvos neste navegador • Aplicativo independente e não oficial</footer><script>
+</style><style id="enem-shorts-v32">.enem-feed-position{text-align:center;color:#9fb6d2;font-size:12px;padding:8px 0 12px}.enem-feed-controls{display:none!important}</style><style id="enem-install-v33">
+#enemInstallButton{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#ffdc35;color:#061a33;border-radius:12px;font-size:14px;padding:11px 15px;margin-top:12px;font-weight:800}
+#enemInstallHelp{display:none;position:fixed;inset:0;z-index:10000;background:#0009;align-items:center;justify-content:center;padding:18px}
+#enemInstallHelp.open{display:flex}
+#enemInstallHelp .install-box{background:#102b49;color:#f7f9ff;border:1px solid #456484;border-radius:18px;padding:22px;max-width:420px;width:100%;box-shadow:0 12px 40px #0006}
+#enemInstallHelp p{line-height:1.55}
+#enemInstallHelp .install-close{background:#ffdc35;color:#061a33}
+</style>
+<script>
+(function(){
+let pending=null;
+window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();pending=e;const b=document.getElementById('enemInstallButton');if(b)b.textContent='⬇ Instalar app'});
+window.addEventListener('appinstalled',()=>{pending=null;const b=document.getElementById('enemInstallButton');if(b)b.hidden=true;document.getElementById('enemInstallHelp')?.classList.remove('open')});
+window.enemInstall=async function(){
+if(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone){alert('O APP ENEM já está aberto como aplicativo instalado.');return}
+if(pending){const event=pending;pending=null;try{await event.prompt();const choice=await event.userChoice;if(choice?.outcome==='accepted')return}catch(e){}}
+const modal=document.getElementById('enemInstallHelp');if(modal)modal.classList.add('open')
+};
+window.enemCloseInstall=()=>document.getElementById('enemInstallHelp')?.classList.remove('open');
+document.addEventListener('DOMContentLoaded',()=>{if(window.matchMedia('(display-mode: standalone)').matches||window.navigator.standalone){const b=document.getElementById('enemInstallButton');if(b)b.hidden=true}});
+})();
+</script></head><body><header><div class="wrap"><h1>🎓 ENEM • Estúdio de Estudos</h1><small>Seu caminho até a universidade, um passo por vez.</small></div></header><nav id="nav"></nav><div id="enemInstallBar" class="wrap" style="padding:0 16px"><button id="enemInstallButton" type="button" onclick="enemInstall()">⬇ Instalar app</button></div><main class="wrap" id="app"></main><div id="enemInstallHelp" role="dialog" aria-modal="true" aria-label="Instalar APP ENEM"><div class="install-box"><h2>Instalar APP ENEM</h2><p>No Android com Chrome, abra o menu <strong>⋮</strong> do navegador e escolha <strong>Instalar app</strong> ou <strong>Adicionar à tela inicial</strong>.</p><p>Se estiver no navegador interno de outro aplicativo, abra esta página no Chrome primeiro.</p><button type="button" class="install-close" onclick="enemCloseInstall()">Entendi</button></div></div><footer>V1 • Dados salvos neste navegador • Aplicativo independente e não oficial</footer><script>
 const tabs=['Shorts','Questões','Simulados','Redação','Leitura','Plano','Estatísticas','Dados'];let tab='Shorts';const areas=['Linguagens','Matemática','Ciências Humanas','Ciências da Natureza'];const seedQuestions=[
 {a:1,t:'Uma camiseta custa R$ 80 e recebe desconto de 25%. Qual o preço final?',o:['R$ 55','R$ 60','R$ 65','R$ 70','R$ 75'],c:1,e:'25% de 80 = 20. Portanto, 80 − 20 = 60.'},
 {a:1,t:'Uma receita para 4 pessoas usa 300 g de arroz. Para 10 pessoas, mantendo a proporção, serão necessários:',o:['450 g','600 g','650 g','750 g','900 g'],c:3,e:'300 × 10 ÷ 4 = 750 g.'},
