@@ -1,0 +1,11 @@
+/* Biblioteca local de vídeos do ENEM: arquivos salvos no próprio dispositivo. */
+(function(){'use strict';
+const DB='enem-videos-local-v1',STORE='arquivos',KEY='criatividade-redacao';
+function openDB(){return new Promise((resolve,reject)=>{const r=indexedDB.open(DB,1);r.onupgradeneeded=()=>{if(!r.result.objectStoreNames.contains(STORE))r.result.createObjectStore(STORE)};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)})}
+async function read(){const db=await openDB();return new Promise((resolve,reject)=>{const t=db.transaction(STORE,'readonly');const q=t.objectStore(STORE).get(KEY);q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);t.oncomplete=()=>db.close()})}
+async function write(file){const db=await openDB();return new Promise((resolve,reject)=>{const t=db.transaction(STORE,'readwrite');t.objectStore(STORE).put(file,KEY);t.oncomplete=()=>{db.close();resolve()};t.onerror=()=>reject(t.error)})}
+let url=null;
+window.enemLoadVideo=async function(){const area=document.getElementById('enemVideoArea');if(!area)return;const input=area.querySelector('input');function show(file){if(url)URL.revokeObjectURL(url);url=URL.createObjectURL(file);const old=area.querySelector('video');if(old)old.remove();const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.style.cssText='display:block;width:100%;max-height:65vh;border-radius:12px;background:#000;margin:12px 0';video.src=url;area.insertBefore(video,input);const p=area.querySelector('p');if(p)p.textContent='Vídeo disponível neste dispositivo.'}
+try{const saved=await read();if(saved&&document.getElementById('enemVideoArea')===area)show(saved)}catch(e){console.warn('Biblioteca de vídeos indisponível',e)}
+input.onchange=async()=>{const file=input.files?.[0];if(!file)return;if(!file.type.startsWith('video/')&&!/\.mp4$/i.test(file.name)){alert('Selecione um vídeo MP4.');return}try{await write(file);show(file)}catch(e){alert('Não foi possível guardar o vídeo neste aparelho. Ele poderá ser reproduzido agora, mas talvez precise ser selecionado novamente.');show(file)}}};
+})();
