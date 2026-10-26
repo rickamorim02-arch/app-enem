@@ -1,0 +1,25 @@
+/* Microfone de ditado disponível em todas as abas. Não grava nem envia arquivos de áudio. */
+(function(){'use strict';
+const Speech=window.SpeechRecognition||window.webkitSpeechRecognition;
+let recognition=null,active=false,finalText='',target=null;
+function el(tag,props){const n=document.createElement(tag);Object.assign(n,props||{});return n}
+function setup(){
+if(document.getElementById('enemMicButton'))return;
+const btn=el('button',{id:'enemMicButton',type:'button',textContent:'🎙️',title:'Microfone: ditar texto'});
+btn.setAttribute('aria-label','Abrir microfone para ditado');btn.style.cssText='position:fixed;right:14px;bottom:86px;z-index:10020;border-radius:50%;width:52px;height:52px;background:#1d4c80;color:#fff;border:2px solid #91c5ff;box-shadow:0 4px 18px #0007;font-size:23px;cursor:pointer';
+const panel=el('section',{id:'enemMicPanel'});panel.setAttribute('role','dialog');panel.setAttribute('aria-label','Ditado por voz');panel.style.cssText='display:none;position:fixed;right:12px;bottom:146px;width:min(380px,calc(100vw - 24px));max-height:65vh;overflow:auto;z-index:10021;background:#112d4d;color:#fff;border:1px solid #6a91bc;border-radius:14px;padding:14px;box-shadow:0 10px 32px #0009';
+panel.innerHTML='<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><strong>🎙️ Ditado por voz</strong><button type="button" id="enemMicClose" aria-label="Fechar microfone">✕</button></div><p id="enemMicStatus" role="status">Toque em Iniciar para ditar.</p><textarea id="enemMicText" rows="5" placeholder="O texto reconhecido aparecerá aqui..." style="box-sizing:border-box;width:100%;min-height:110px;resize:vertical;color:#111;background:#fff;padding:8px"></textarea><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:9px"><button type="button" id="enemMicToggle">🎙️ Iniciar</button><button type="button" id="enemMicInsert">Inserir no campo</button><button type="button" id="enemMicCopy">Copiar texto</button><button type="button" id="enemMicClear">Limpar</button></div><small>Disponibilidade e processamento de voz dependem do navegador. Não salvamos gravações de áudio.</small>';
+document.body.append(btn,panel);
+const status=panel.querySelector('#enemMicStatus'),textarea=panel.querySelector('#enemMicText'),toggle=panel.querySelector('#enemMicToggle');
+function stop(){if(recognition&&active)try{recognition.stop()}catch(e){}active=false;toggle.textContent='🎙️ Iniciar';btn.style.background='#1d4c80'}
+function start(){if(!Speech){status.textContent='Reconhecimento de voz indisponível neste navegador. Use o ditado do teclado.';return}finalText=textarea.value.trim();recognition=new Speech();recognition.lang='pt-BR';recognition.continuous=true;recognition.interimResults=true;recognition.onresult=e=>{let interim='';for(let i=e.resultIndex;i<e.results.length;i++){const t=e.results[i][0].transcript;if(e.results[i].isFinal)finalText+=(finalText?' ':'')+t.trim();else interim+=t}textarea.value=finalText+(interim?' '+interim:'')};recognition.onerror=e=>{status.textContent='Microfone: '+(e.error==='not-allowed'?'permissão negada':e.error);stop()};recognition.onend=()=>{active=false;toggle.textContent='🎙️ Iniciar';btn.style.background='#1d4c80';if(status.textContent==='Ouvindo...')status.textContent='Ditado encerrado.'};try{recognition.start();active=true;toggle.textContent='⏹ Parar';btn.style.background='#b92d48';status.textContent='Ouvindo...'}catch(e){status.textContent='Não foi possível iniciar: '+e.message;stop()}}
+document.addEventListener('focusin',e=>{const x=e.target;if(x!==textarea&&(x.matches?.('textarea,input:not([type=button]):not([type=checkbox]),[contenteditable="true"]')))target=x});
+btn.onclick=()=>{panel.style.display=panel.style.display==='none'?'block':'none';if(panel.style.display==='none')stop()};
+panel.querySelector('#enemMicClose').onclick=()=>{stop();panel.style.display='none'};
+toggle.onclick=()=>active?stop():start();
+panel.querySelector('#enemMicInsert').onclick=()=>{const t=textarea.value.trim();if(!t){status.textContent='Nenhum texto para inserir.';return}if(!target||!target.isConnected){status.textContent='Selecione primeiro um campo de resposta na aba desejada.';return}target.focus();if(target.isContentEditable){target.textContent+=(target.textContent?' ':'')+t;target.dispatchEvent(new Event('input',{bubbles:true}))}else{const a=target.selectionStart??target.value.length,b=target.selectionEnd??a;target.setRangeText(t,a,b,'end');target.dispatchEvent(new Event('input',{bubbles:true}));target.dispatchEvent(new Event('change',{bubbles:true}))}status.textContent='Texto inserido no campo.'};
+panel.querySelector('#enemMicCopy').onclick=async()=>{try{await navigator.clipboard.writeText(textarea.value);status.textContent='Texto copiado.'}catch(e){textarea.select();status.textContent='Selecione e copie o texto manualmente.'}};
+panel.querySelector('#enemMicClear').onclick=()=>{stop();textarea.value='';finalText='';status.textContent='Texto limpo.'};
+}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',setup);else setup();
+})();
