@@ -6,6 +6,8 @@ const groups=[
 {label:'Leitura',icon:'📖',items:['Leitura','Leitura - Linguagens','Leitura - Humanas','Leitura - Natureza','Leitura - Matemática','Leitura - Redação']},
 {label:'Vídeos',icon:'🎥',items:['Vídeos']},
 {label:'Tarefas',icon:'☑️',items:['Tarefas']},
+{label:'Resumos',icon:'📝',items:['Resumos']},
+{label:"PDF's INEP",icon:'📄',items:["PDF's INEP"]},
 {label:'Mais',icon:'☰',items:['Mais','Desempenho','Estatísticas','Discursivas','Gravações','Redação','Plano','Dados']}
 ];
 
@@ -25,6 +27,8 @@ if(tab==='Matérias'||tab.startsWith('Área: '))tab='Shorts';
 if(tab==='Leitura'){document.querySelector('#app').innerHTML=hub('Leitura por matéria','Escolha uma das quatro áreas do ENEM ou estude redação.',[['Leitura - Linguagens','📚','Linguagens, Códigos e suas Tecnologias'],['Leitura - Humanas','🌎','Ciências Humanas e suas Tecnologias'],['Leitura - Natureza','🔬','Ciências da Natureza e suas Tecnologias'],['Leitura - Matemática','📐','Matemática e suas Tecnologias'],['Leitura - Redação','✍️','Três aulas completas de redação']]);}
 else if(tab.startsWith('Leitura - ')){const names={'Leitura - Linguagens':'Linguagens, Códigos e suas Tecnologias','Leitura - Humanas':'Ciências Humanas e suas Tecnologias','Leitura - Natureza':'Ciências da Natureza e suas Tecnologias','Leitura - Matemática':'Matemática e suas Tecnologias'};document.querySelector('#app').innerHTML='<section class="panel"><button type="button" onclick="go(\'Leitura\')">← Todas as matérias</button></section>'+(names[tab]?'<section class="panel"><h2>'+names[tab]+'</h2></section>':'');}
 else if(tab==='Tarefas'){window.enemRenderTasks?.();}
+else if(tab==='Resumos'){document.querySelector('#app').innerHTML='<section class="panel"><h2>📝 Resumos</h2><p>Espaço reservado para organizar resumos por matéria e aula.</p><p>Nenhum resumo cadastrado nesta aba.</p></section>';}
+else if(tab==="PDF's INEP"){document.querySelector('#app').innerHTML='<section class="panel"><h2>📄 PDF\'s INEP</h2><p>Espaço reservado aos documentos em PDF do INEP.</p><p>Nenhum PDF cadastrado nesta aba.</p></section>';}
 else if(tab==='Vídeos'){document.querySelector('#app').innerHTML='<section class="panel"><h2>🎥 Vídeos</h2><p>Nenhum vídeo cadastrado.</p></section>';}
 else if(tab==='Mais'){document.querySelector('#app').innerHTML=hub('Mais','Acompanhe seu desempenho e pratique discursivas.',[['Desempenho','📊','Estatísticas e evolução dos estudos'],['Discursivas','✍️','Escolher, sortear e responder um dos 100 temas'],['Gravações','🎙️','Ouvir e exportar áudios gravados']])+'<section class="panel"><h3>Aplicativo</h3><button type="button" id="enemInstallInMore" onclick="enemInstall()">⬇ Instalar aplicativo</button><div id="enemOfflinePanel" style="margin-top:18px"><h3>📴 Modo offline</h3><p id="enemOfflineStatus">Verificando arquivos disponíveis...</p><button type="button" onclick="enemPrepareOffline()">⬇ Preparar para usar sem internet</button><p><small>Prepare com internet. Depois, abra o aplicativo neste mesmo navegador mesmo sem conexão.</small></p></div></section>';}
 else if(tab==='Gravações'){document.querySelector('#app').innerHTML='<section class="panel"><h2>🎙️ Gravações de voz</h2><p>Ouça, exporte ou exclua suas gravações salvas neste aparelho.</p><div id="enemRecordingsList">Carregando...</div></section>';window.enemShowRecordings?.();}
