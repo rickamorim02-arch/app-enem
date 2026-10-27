@@ -37,7 +37,8 @@ window.enemRenderErrorReport=()=>{
  const root=document.getElementById('app');if(!root)return;
  const data=read();const wrong=questions.map((q,i)=>({q,i,r:data[i]})).filter(x=>x.r&&x.r.correct===false);
  const counts={};wrong.forEach(x=>{counts[x.q.area]=(counts[x.q.area]||0)+1});
- root.innerHTML='<section class="panel"><button type="button" onclick="go(\\'Mais\\')">← Mais</button><h2>📋 Relatório de erros</h2><p id="enemErrorsSummary"></p><button type="button" id="enemPrintErrors">🖨️ Imprimir relatório</button><div id="enemErrorsList"></div></section>'.replace(/\\'/g,"'");
+ root.innerHTML=`<section class="panel"><button type="button" id="enemErrorsBack">← Mais</button><h2>📋 Relatório de erros</h2><p id="enemErrorsSummary"></p><button type="button" id="enemPrintErrors">🖨️ Imprimir relatório</button><div id="enemErrorsList"></div></section>`;
+ document.getElementById('enemErrorsBack').onclick=()=>go('Mais');
  document.getElementById('enemErrorsSummary').textContent=wrong.length+' questão(ões) errada(s) · '+Object.entries(counts).map(([k,v])=>k+': '+v).join(' · ');
  const list=document.getElementById('enemErrorsList');
  if(!wrong.length)list.textContent='Nenhum erro registrado nos Shorts neste aparelho.';
