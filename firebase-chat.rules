@@ -2,12 +2,7 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     match /enemPrivateRooms/{roomId} {
-      function signed() {
-        return request.auth != null;
-      }
-      function participant() {
-        return signed() && request.auth.uid in resource.data.members;
-      }
+      function signed() { return request.auth != null; }
       allow get: if signed();
       allow list: if false;
       allow create: if signed()
@@ -22,26 +17,31 @@ service cloud.firestore {
         && request.resource.data.members == [resource.data.members[0], request.auth.uid]
         && request.auth.uid != resource.data.members[0];
       allow delete: if false;
+
       match /messages/{messageId} {
-        function member() {
+        function participant() {
           return request.auth != null
             && request.auth.uid in get(/databases/$(database)/documents/enemPrivateRooms/$(roomId)).data.members;
         }
-        allow get, list: if member();
-        allow create: if member()
+        function validText() {
+          return !request.resource.data.keys().hasAny(['imageData'])
+            && request.resource.data.text.size() > 0;
+        }
+        function validImage() {
+          return request.resource.data.keys().hasAll(['imageData'])
+            && request.resource.data.text == ''
+            && request.resource.data.imageData is string
+            && request.resource.data.imageData.size() <= 180000
+            && request.resource.data.imageData.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$');
+        }
+        allow get, list: if participant();
+        allow create: if participant()
           && request.resource.data.keys().hasOnly(['uid', 'text', 'imageData', 'createdAt'])
+          && request.resource.data.keys().hasAll(['uid', 'text', 'createdAt'])
           && request.resource.data.uid == request.auth.uid
           && request.resource.data.text is string
           && request.resource.data.text.size() <= 2000
-          && (
-            (!request.resource.data.keys().hasAny(['imageData'])
-              && request.resource.data.text.size() > 0)
-            || (request.resource.data.keys().hasAny(['imageData'])
-              && request.resource.data.text == ''
-              && request.resource.data.imageData is string
-              && request.resource.data.imageData.size() <= 180000
-              && request.resource.data.imageData.matches('^data:image/jpeg;base64,[A-Za-z0-9+/=]+$'))
-          )
+          && (validText() || validImage())
           && request.resource.data.createdAt == request.time;
         allow update, delete: if false;
       }
