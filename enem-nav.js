@@ -5,6 +5,7 @@ const groups=[
 {label:'Shorts',icon:'🎬',items:['Shorts']},
 {label:'Leitura',icon:'📖',items:['Leitura','Leitura - Linguagens','Leitura - Humanas','Leitura - Natureza','Leitura - Matemática','Leitura - Redação']},
 {label:'Vídeos',icon:'🎥',items:['Vídeos']},
+{label:'Chat',icon:'💬',items:['Chat']},
 {label:'Tarefas',icon:'☑️',items:['Tarefas']},
 {label:"Materiais INEP",icon:'📄',items:["Materiais INEP"]},
 {label:'Mais',icon:'☰',items:['Mais','Desempenho','Estatísticas','Discursivas','Gravações','Redação','Plano','Dados']}
@@ -27,6 +28,7 @@ if(tab==='Leitura'){document.querySelector('#app').innerHTML=hub('Leitura por ma
 else if(tab.startsWith('Leitura - ')){const names={'Leitura - Linguagens':'Linguagens, Códigos e suas Tecnologias','Leitura - Humanas':'Ciências Humanas e suas Tecnologias','Leitura - Natureza':'Ciências da Natureza e suas Tecnologias','Leitura - Matemática':'Matemática e suas Tecnologias'};document.querySelector('#app').innerHTML='<section class="panel"><button type="button" onclick="go(\'Leitura\')">← Todas as matérias</button></section>'+(names[tab]?'<section class="panel"><h2>'+names[tab]+'</h2></section>':'');}
 else if(tab==='Tarefas'){window.enemRenderTasks?.();}
 else if(tab==='Materiais INEP'){window.enemInepRender?.();}
+else if(tab==='Chat'){window.enemChatRender?.();}
 else if(tab==='Vídeos'){document.querySelector('#app').innerHTML='<section class="panel"><h2>🎥 Vídeos</h2><p>Nenhum vídeo cadastrado.</p></section>';}
 else if(tab==='Mais'){document.querySelector('#app').innerHTML=hub('Mais','Acompanhe seu desempenho e pratique discursivas.',[['Desempenho','📊','Estatísticas e evolução dos estudos'],['Discursivas','✍️','Escolher, sortear e responder um dos 100 temas'],['Gravações','🎙️','Ouvir e exportar áudios gravados'],['Relatório de erros','📋','Questões erradas com opção de imprimir']])+'<section class="panel"><h3>Aplicativo</h3><button type="button" id="enemInstallInMore" onclick="enemInstall()">⬇ Instalar aplicativo</button><div id="enemOfflinePanel" style="margin-top:18px"><h3>📴 Modo offline</h3><p id="enemOfflineStatus">Verificando arquivos disponíveis...</p><button type="button" onclick="enemPrepareOffline()">⬇ Preparar para usar sem internet</button><p><small>Prepare com internet. Depois, abra o aplicativo neste mesmo navegador mesmo sem conexão.</small></p></div></section>';}
 else if(tab==='Relatório de erros'){window.enemRenderErrorReport?.();}
