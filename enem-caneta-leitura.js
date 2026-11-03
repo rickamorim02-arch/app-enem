@@ -2,7 +2,7 @@
 (function(){'use strict';
 const PREFIX='enem-caneta-v1:', colors=['#ffe24a','#ef5261','#38d9a9','#79b8ff'];
 let current='',drawing=false,last=null,canvas=null,ctx=null,tool='pen',color=colors[0];
-function isLesson(){return !!document.querySelector('#app article') && typeof window.enemCompleteLesson==='function' && /Leitura - /.test(typeof tab==='string'?tab:'');}
+function isLesson(){return !!document.querySelector('#app article') && ((typeof tab==='string'&&tab==='Leitura - Redação') || (typeof window.enemCompleteLesson==='function' && /Leitura - /.test(typeof tab==='string'?tab:'')));}
 function save(){if(!canvas||!current)return;try{localStorage.setItem(PREFIX+current,canvas.toDataURL('image/png'))}catch(e){console.warn('Anotação não salva',e)}}
 function resize(){if(!canvas)return;const host=canvas.parentElement;const w=host.clientWidth,h=host.scrollHeight;const old=canvas.width?canvas.toDataURL():null;canvas.width=Math.max(1,Math.round(w));canvas.height=Math.max(1,Math.round(h));canvas.style.width=w+'px';canvas.style.height=h+'px';ctx=canvas.getContext('2d');if(old){const img=new Image();img.onload=()=>ctx.drawImage(img,0,0,canvas.width,canvas.height);img.src=old;}}
 function restore(){const saved=localStorage.getItem(PREFIX+current);if(saved){const img=new Image();img.onload=()=>{if(ctx)ctx.drawImage(img,0,0,canvas.width,canvas.height)};img.src=saved;}}
