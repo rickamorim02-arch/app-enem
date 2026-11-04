@@ -15,11 +15,11 @@ const list=document.getElementById('enemVideoList');for(const area of [...areas,
 const published=(l.area==='Humanas'||l.area==='Linguagens')&&l.number===1;
 if(!published){slot.textContent='Aguardando envio do vídeo.';continue}
 slot.textContent='';const indicator=document.createElement('div');indicator.style.cssText='margin-bottom:8px;font-weight:600;color:#25344b';slot.append(indicator);
-const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.style.cssText='display:block;width:100%;max-height:60vh;background:#000;border-radius:9px';slot.append(video);
-const parts=videoPaths(l);let part=0;
-function showPart(n,autoplay){part=n;indicator.textContent='Parte '+(n+1)+' de '+parts.length;video.src=parts[n];video.load();if(autoplay)video.play().catch(()=>{});}
-video.addEventListener('ended',()=>{if(part+1<parts.length)showPart(part+1,true)});
-video.addEventListener('error',()=>{indicator.textContent='Não foi possível carregar a parte '+(part+1)+'. Verifique a conexão ou abra o arquivo diretamente no GitHub.'});
-showPart(0,false);
+const parts=videoPaths(l);let part=0;const choices=document.createElement('div');choices.style.cssText='display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px';slot.append(choices);
+const video=document.createElement('video');video.controls=true;video.playsInline=true;video.preload='metadata';video.setAttribute('controlsList','nodownload noremoteplayback');video.disablePictureInPicture=true;video.disableRemotePlayback=true;video.style.cssText='display:block;width:100%;max-height:60vh;background:#000;border-radius:9px';video.addEventListener('contextmenu',e=>e.preventDefault());slot.append(video);
+const buttons=parts.map((src,n)=>{const b=document.createElement('button');b.type='button';b.textContent='Parte '+(n+1);b.setAttribute('aria-label','Assistir parte '+(n+1)+' da aula '+l.number+' de '+l.area);b.onclick=()=>showPart(n);choices.append(b);return b});
+function showPart(n){part=n;video.pause();indicator.textContent='Parte '+(n+1)+' de '+parts.length;buttons.forEach((b,i)=>{b.style.cssText='padding:8px 12px;border-radius:9px;background:'+(i===n?'#176a4b':'#dcd8eb')+';color:'+(i===n?'white':'#17263c');b.setAttribute('aria-pressed',String(i===n))});video.src=parts[n];video.load()}
+video.addEventListener('error',()=>{indicator.textContent='Não foi possível carregar a parte '+(part+1)+'. Verifique sua conexão.'});
+showPart(0);
 }}};
 })();
